@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zamówienie</title>
+    <style>
+      .card {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px;
+        width: 300px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="startOrder">Rozpocznij</button>
+    <div id="cardContainer"></div>
+
+    <div id="menu" style="display: none">
+      <h2>Menu:</h2>
+      <ul id="menuList"></ul>
+      <button id="placeOrder">Złóż zamówienie</button>
+    </div>
+
+    <div id="orderNumber" style="display: none">
+      <h2>Twój numerek oczekiwania: <span id="numberDisplay"></span></h2>
+    </div>
+
+    <script>
+      const addedMeals = [];
+      const startButton = document.getElementById('startOrder');
+      const menuDiv = document.getElementById('menu');
+      const orderButton = document.getElementById('placeOrder');
+      const orderNumberDiv = document.getElementById('orderNumber');
+      const numberDisplay = document.getElementById('numberDisplay');
+      const menuList = document.getElementById('menuList');
+      const cardContainer = document.getElementById('cardContainer');
+
+      function addToMealsArrray(meal) {
+        addedMeals.push(meal);
+      }
+
+      function createCard(meal) {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        const cardContent = `
+                <h2>${meal.name}</h2>
+                <span><p>${meal.description}</p> Cena ${meal.price}</span>
+                <button>Dodaj</button>
+            `;
+        card.innerHTML = cardContent;
+        const addButton = card.querySelector('button');
+        addButton.addEventListener('click', () => {
+          addToMealsArrray(meal);
+        });
+
+        return card;
+      }
+
+      startButton.addEventListener('click', async () => {
+        startButton.style.display = 'none';
+        menuDiv.style.display = 'block';
+
+        // Pobierz listę dań z serwera
+        const response = await fetch('/meals');
+        const data = await response.json();
+        const meals = data.data;
+        meals.forEach((meal) => {
+          const card = createCard(meal);
+          cardContainer.appendChild(card);
+        });
+      });
+
+      orderButton.addEventListener('click', async () => {
+        const orderNumber = Math.floor(Math.random() * 99) + 1;
+        numberDisplay.textContent = orderNumber;
+        const order = {
+          orderId: orderNumber,
+          meals: addedMeals,
+          status: 0,
+        };
+
+        const response = await fetch('/order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(order),
+        });
+
+        const data = await response.json();
+
+        if (data.message === 'Success') {
+          menuDiv.style.display = 'none';
+          orderNumberDiv.style.display = 'block';
+        } else {
+          alert('Wystąpił błąd podczas składania zamówienia.');
+        }
+      });
+      function fetchMeals() {
+        fetch('/meals')
+          .then((response) => response.json())
+          .then((data) => {
+            // Aktualizuj listę dań na podstawie danych z serwera
+          })
+          .catch((error) => console.error('Error fetching meals:', error));
+      }
+
+      // Odpytuj serwer co 10 sekund
+      setInterval(fetchMeals, 1000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ekran 3 - Numery oczekiwania</title>
+    <style>
+      .orders-column {
+        width: 50%;
+        float: left;
+        box-sizing: border-box;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orders-column" id="inProgress">
+      <h2>W realizacji:</h2>
+    </div>
+    <div class="orders-column" id="ready">
+      <h2>Gotowe do odbioru:</h2>
+    </div>
+
+    <script>
+      async function fetchOrders() {
+        const response = await fetch('/orders');
+        const data = await response.json();
+        const inProgressDiv = document.getElementById('inProgress');
+        const readyDiv = document.getElementById('ready');
+
+        // Wyczyść obecne zawartości divów
+        inProgressDiv.innerHTML = '<h2>W realizacji:</h2>';
+        readyDiv.innerHTML = '<h2>Gotowe do odbioru:</h2>';
+
+        data.orders.forEach((order) => {
+          const orderDiv = document.createElement('div');
+          orderDiv.innerText = `Numer oczekiwania: ${order.orderId}`;
+
+          if (order.status === false) {
+            inProgressDiv.appendChild(orderDiv);
+          } else {
+            readyDiv.appendChild(orderDiv);
+          }
+        });
+      }
+
+      window.onload = fetchOrders;
+      setInterval(fetchOrders, 5000);
+    </script>
+  </body>
+</html>
